@@ -4,13 +4,14 @@ export interface IProductItem {
   image: string;
   title: string;
   category: string;
-  price: string;
+  price: number;
 };
 
 export interface IProductsData {
   cards: IProductItem[];
   preview: string | null;
-  getCard(cardId: string): IProductItem;
+  setCatalog(items: IProductItem[]): IProductItem;
+  setPreview(item: IProductItem) : IProductItem;
 }
 
 export type IBasketItem = Pick<IProductItem, 'id' | 'title' | 'price'> & {
@@ -38,3 +39,6 @@ export interface IOrderResult {
   id: string;
   total: number;
 };
+
+export type OrderFormErrors = Partial<Record<keyof IOrderForm, string>>;
+export type UserFormErrors = Partial<Record<keyof IUserForm, string>>;
