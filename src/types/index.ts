@@ -1,9 +1,11 @@
+export type ItemCategory = 'софт-скил' | 'хард-скил' | 'другое' | 'дополнительное' | 'кнопка';
+
 export interface IProductItem {
   id: string;
   description?: string;
   image: string;
   title: string;
-  category: string;
+  category: ItemCategory;
   price: number;
 };
 
@@ -14,14 +16,20 @@ export interface IProductsData {
   setPreview(item: IProductItem) : IProductItem;
 }
 
-export type IBasketItem = Pick<IProductItem, 'id' | 'title' | 'price'> & {
-  number: number;
-};
+export type IBasketItem = Pick<IProductItem, 'id' | 'title' | 'price'>;
 
-export type PaymentMethod = 'cash' | 'card' | undefined;
+export interface IBasketModal{
+  items: IBasketItem[];
+  add(items: IBasketItem): void;
+  remove(item: IBasketItem): void;
+  getTotalPrice(): number;
+  clearBasket(): void;
+}
+
+export type PaymentMethod = Pick<IOrder, 'payment'>;
 
 export interface IOrder{
-  paymentMethod: PaymentMethod;
+  payment: string;
   total: number;
   items: string[];
   email: string;
@@ -29,7 +37,7 @@ export interface IOrder{
   address: string;
 };
 
-export type IOrderForm = Pick<IOrder, 'paymentMethod' | 'address'>;
+export type IOrderForm = Pick<IOrder, 'payment' | 'address'>;
 
 export type IUserForm = Pick<IOrder, 'email' | 'phone'>;
 

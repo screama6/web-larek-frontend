@@ -1,45 +1,51 @@
 import {Component} from "./base/Component";
-import {IProductItem} from "../types";
-import {bem, createElement, ensureElement} from "../utils/utils";
-import {EventEmitter} from "./base/events";
+import {ItemCategory} from "../types";
+import {bem, ensureElement} from "../utils/utils";
+import clsx from "clsx";
 
 interface ICardActions {
     onClick: (event: MouseEvent) => void;
 }
 
+export interface ICard<T> {
+    title: string;
+    description?: string;
+    image?: string;
+    price: number;
+    id?: string;
+    index?: string;
+    category?: T;
+}
 
-export class Card<T> extends Component<T> {
+export class Card<T> extends Component<ICard<T>> {
     protected _title: HTMLElement;
-    protected _category?: HTMLElement;
     protected _price: HTMLElement;
     protected _image?: HTMLImageElement
     protected _description?: HTMLElement;
-    protected _button: HTMLButtonElement;
+    protected _button?: HTMLButtonElement;
+    protected _index?: HTMLElement;
 
     constructor(protected blockName: string, container: HTMLElement, actions?: ICardActions) {
         super(container);
 
         this._title = ensureElement<HTMLElement>(`.${blockName}__title`, container);
-        this._image = ensureElement<HTMLImageElement>(`.${blockName}__image`, container);
-        this._category = ensureElement<HTMLElement>(`.${blockName}__category`, container);
+        this._image = container.querySelector(`.${blockName}__image`);
+        
         this._price = ensureElement<HTMLElement>(`.${blockName}__price`, container);
-        this._button = container.querySelector(`.${blockName}`);
+        this._button = container.querySelector(`.${blockName}__button`);
         this._description = container.querySelector(`.${blockName}__description`);
+        this._index = container.querySelector(`.basket__item-index`);
 
-       /* if(this._button) {
-            this._button.addEventListener('click', () => {
-                events.emit('card: open')
-            })
-        } else { console.log(1)}*/
         if (actions?.onClick) {
             if (this._button) {
                 this._button.addEventListener('click', actions.onClick);
             } else {
                 container.addEventListener('click', actions.onClick);
-                console.log(1)
             }
         }
     }
+
+    
 
     set title(value: string) {
         this.setText(this._title, value);
@@ -49,24 +55,27 @@ export class Card<T> extends Component<T> {
         return this._title.textContent || '';
     }
 
+    set index(value: string) {
+        this.setText(this._index, value);
+    }
+
+    get index(): string {
+        return this._index.textContent || '';
+    }
+
     set price(value: string) {
-        this.setText(this._price, value);
+        if(value === null) {
+            value = '0'
+        }
+        this.setText(this._price, `${value} синапсов`);
     }
 
     get price(): string {
         return this._price.textContent || '';
     }
 
-    set category(value: string) {
-        this.setText(this._category, value);
-    }
-
-    get category(): string {
-        return this._category.textContent || '';
-    }
-
     set image(value: string) {
-        this.setImage(this._image, value, this.title)
+        this.setImage(this._image, value, this.title);
     }
 
     set description(value: string | string[]) {
@@ -80,11 +89,31 @@ export class Card<T> extends Component<T> {
             this.setText(this._description, value);
         }
     }
+
+    buttonDeleteInBasket (value: string) {
+        this.setText(this._button, value);
+    }
 }
 
 
 export class CatalogItem<T> extends Card<T> {
+
+    protected _category?: HTMLElement;
+
     constructor(container: HTMLElement, actions?: ICardActions) {
         super('card', container, actions);
+
+        this._category = container.querySelector(`.card__category`);
     }
-}
+
+    set category(category: ItemCategory) {
+        this.setText(this._category, category);
+        this._category.className = clsx('card__category', {
+            [bem(this.blockName, 'category', 'soft').name]: category === 'софт-скил',
+            [bem(this.blockName, 'category', 'hard').name]: category === 'хард-скил',
+            [bem(this.blockName, 'category', 'other').name]: category === 'другое',
+            [bem(this.blockName, 'category', 'additional').name]: category === 'дополнительное',
+            [bem(this.blockName, 'category', 'button').name]: category === 'кнопка'
+        });
+    };
+};

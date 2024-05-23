@@ -1,11 +1,10 @@
 import { Api, ApiListResponse } from './base/api';
-import {IOrder, IOrderResult, IProductItem} from "../types";
+import {IBasketItem, IBasketModal, IOrder, IOrderForm, IOrderResult, IProductItem, IUserForm} from "../types";
 
 export interface IProductAPI {
     getProductList: () => Promise<IProductItem[]>;
     getProductItem: (id: string) => Promise<IProductItem>;
-    /*getOpenProduct: (id: string) => Promise<IProductItem>;*/
-    orderProduct: (order: IOrder) => Promise<IOrderResult>;
+    orderProduct: (orderForm: IOrderForm, userForm: IUserForm, basketModal: IBasketModal) => Promise<IOrderResult>;
 }
 
 export class ProductAPI extends Api implements IProductAPI {
@@ -25,12 +24,6 @@ export class ProductAPI extends Api implements IProductAPI {
         );
     }
 
-    /*getOpenProduct(id: string): Promise<IProductItem> {
-        return this.get(`/product/${id}`).then(
-            (data: IProductItem) => data
-        );
-    }*/
-
     getProductList(): Promise<IProductItem[]> {
         return this.get('/product').then((data: ApiListResponse<IProductItem>) =>
             data.items.map((item) => ({
@@ -40,7 +33,26 @@ export class ProductAPI extends Api implements IProductAPI {
         );
     }
 
-    orderProduct(order: IOrder): Promise<IOrderResult> {
+    orderProduct(orderForm: IOrderForm, userForm: IUserForm, basketModel: IBasketModal ): Promise<IOrderResult> {
+        
+        let items: IBasketItem[] = []
+        basketModel.items.forEach((item) => {
+            if(item.price === null){
+                console.log(123)
+                basketModel.remove(item)
+            } else {
+                items.push(item)
+            }
+        })
+        
+        const order: IOrder = {
+            address: orderForm.address,
+            payment: orderForm.payment,
+            email: userForm.email,
+            phone: userForm.phone,
+            total: basketModel.getTotalPrice(),
+            items: items.map((item) => item.id)
+    }
         return this.post('/order', order).then(
             (data: IOrderResult) => data
         );

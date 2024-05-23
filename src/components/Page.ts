@@ -11,7 +11,7 @@ export class Page extends Component<IPage> {
     protected _catalog: HTMLElement;
     protected _basket: HTMLElement;
     protected _wrapper: HTMLElement;
-    protected _counter: HTMLElement;
+    protected _basketCounter: HTMLElement;
 
 
     constructor(container: HTMLElement, protected events: IEvents) {
@@ -20,15 +20,15 @@ export class Page extends Component<IPage> {
         this._catalog = ensureElement<HTMLElement>('.gallery');
         this._basket = ensureElement<HTMLElement>('.header__basket');
         this._wrapper = ensureElement<HTMLElement>('.page__wrapper');
-        this._counter = ensureElement<HTMLElement>('.header__basket-counter');
+        this._basketCounter = ensureElement<HTMLElement>('.header__basket-counter');
 
         this._basket.addEventListener('click', () => {
             this.events.emit('bids:open');
         });
     }
 
-    set counter(value: number) {
-        this.setText(this._counter, String(value));
+    set basketCounter(value: number) {
+        this.setText(this._basketCounter, String(value));
     }
 
     set catalog(items: HTMLElement[]) {
