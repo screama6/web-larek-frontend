@@ -1,16 +1,16 @@
 import './scss/styles.scss';
 import {ProductAPI} from "./components/ProductAPI";
 import {API_URL, CDN_URL} from "./utils/constants";
-import {EventEmitter} from "./components/base/events"
-import {ProductData, ProductItem} from "./components/ProductData"
+import {EventEmitter} from "./components/base/Events"
+import {AppState, ProductItem} from "./components/AppState"
 import {Modal} from "./components/common/Modal";
 import {cloneTemplate, ensureElement} from "./utils/utils";
 import {Page} from "./components/Page";
 import {CatalogItem} from "./components/Card";
-import {Basket, BasketModal} from "./components/common/Basket";
-import {Order, User} from "./components/Order";
+import {Basket, BasketModal} from "./components/Basket";
+import {OrderForm, ContactsForm} from "./components/Order";
 import {IOrderForm, IUserForm, PaymentMethod} from './types';
-import {Success} from "./components/common/Success";
+import {Success} from "./components/Success";
 
 const api = new ProductAPI(CDN_URL, API_URL);
 const events = new EventEmitter();
@@ -19,7 +19,7 @@ const page = new Page(document.body, events);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events);
 
 
-const productData = new ProductData({}, events);
+const appState = new AppState({}, events);
 
 const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
 const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
@@ -29,18 +29,24 @@ const orderFormTemplate = ensureElement<HTMLTemplateElement>('#order');
 const userFormTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
+const success = new Success(cloneTemplate(successTemplate), {
+  onClick: () => {
+      modal.close();
+      events.emit('basket:change');
+  }
+});
 
 const basket = new Basket(cloneTemplate(basketTemplate), events);
 
-const orderForm = new Order(cloneTemplate(orderFormTemplate), events, {
+const orderForm = new OrderForm(cloneTemplate(orderFormTemplate), events, {
   onClick: (name) => {
     events.emit('orderPayment:change', {field: 'payment', name: name});
   }
 });
-const userForm = new User (cloneTemplate(userFormTemplate), events);
+const userForm = new ContactsForm(cloneTemplate(userFormTemplate), events);
 
 events.on('items:changed', () => {
-  page.catalog = productData.cards.map(item => {
+  page.catalog = appState.cards.map(item => {
       const card = new CatalogItem (cloneTemplate(cardCatalogTemplate), {
         onClick: () => events.emit('card:open', item)
     });
@@ -57,15 +63,16 @@ events.on('items:changed', () => {
 
 events.on('orderPayment:change', (data: { field: keyof IOrderForm, name: keyof PaymentMethod}) => {
   orderForm.render({
-    payment: `${data.name}`,
-          valid: false,
-          errors: []
-  });
-  productData.setOrderField(data.field, data.name);
+      payment: `${data.name}`,
+            valid: false,
+            errors: []
+    });
+  
+  appState.setOrderField(data.field, data.name);
 });
 
 events.on('card:open', (item: ProductItem) => {
-  productData.setPreview(item);
+  appState.setPreview(item);
 });
 
 events.on('bids:open', () => {
@@ -76,10 +83,10 @@ events.on('bids:open', () => {
     });
 
 events.on('basket:change', () => {
-  page.basketCounter = productData.basketModal.items.length;
-  basket.total = productData.basketModal.getTotalPrice();
-  basket.items = Array.from(productData.basketModal.items).map((basketItem, index) => {
-    const item = Array.from(productData.basketModal.items).find(
+  page.basketCounter = appState.basketModal.items.length;
+  basket.total = appState.basketModal.getTotalPrice();
+  basket.items = Array.from(appState.basketModal.items).map((basketItem, index) => {
+    const item = Array.from(appState.basketModal.items).find(
       (catalogItem) => catalogItem.id === basketItem.id
     );
     const card = new CatalogItem (cloneTemplate(cardBasketTemplate), {
@@ -94,21 +101,21 @@ events.on('basket:change', () => {
   });
 
 events.on('addInbasket:change', (item: ProductItem) => {
-  productData.basketModal.add(item);
+  appState.basketModal.add(item);
   events.emit('basket:change');
   events.emit('preview:changed', item);
 });
 
 events.on('removeFromBasket:change', (item: ProductItem) => {
-  productData.basketModal.remove(item);
+  appState.basketModal.remove(item);
   events.emit('basket:change');
   events.emit('card:changed', item);
 });
 
 events.on('card:changed', (item: ProductItem) => {
 
-  let card = new CatalogItem (cloneTemplate(cardPreviewTemplate));
-  if(productData.basketModal.items.find((el) => el.id === item.id)){
+  let card;
+  if(appState.basketModal.items.find((el) => el.id === item.id)){
     card = new CatalogItem (cloneTemplate(cardPreviewTemplate), {
       onClick: () => events.emit('removeInCardFromBasket:change', item)
     });
@@ -130,15 +137,15 @@ events.on('card:changed', (item: ProductItem) => {
 });
 
 events.on('removeInCardFromBasket:change', (item: ProductItem) => {
-  productData.basketModal.remove(item);
+  appState.basketModal.remove(item);
   events.emit('basket:change');
   events.emit('preview:changed', item);
 });
 
 events.on('preview:changed', (item: ProductItem) => {
 
-    let card: any = new CatalogItem (cloneTemplate(cardPreviewTemplate));
-    if(productData.basketModal.items.find((el) => el.id === item.id)){
+    let card;
+    if(appState.basketModal.items.find((el) => el.id === item.id)){
       card = new CatalogItem (cloneTemplate(cardPreviewTemplate), {
         onClick: () => events.emit('removeInCardFromBasket:change', item)
       });
@@ -196,25 +203,18 @@ events.on('userFormErrors:change', (errors: Partial<IUserForm>) => {
 });
 
 events.on(/^order\..*:change/, (data: { field: keyof IOrderForm, value: string }) => {
-  productData.setOrderField(data.field, data.value);
+  appState.setOrderField(data.field, data.value);
 });
 
 events.on(/^contacts\..*:change/, (data: { field: keyof IUserForm, value: string }) => {
-  productData.setUserField(data.field, data.value);
+  appState.setUserField(data.field, data.value);
 });
 
 events.on('contacts:submit', () => {
  
-  api.orderProduct(productData.orderForm, productData.userForm, productData.basketModal)
+  api.orderProduct(appState.orderForm, appState.userForm, appState.basketModal)
       .then((result) => {
-          const success = new Success(cloneTemplate(successTemplate), {
-              onClick: () => {
-                  modal.close();
-                  events.emit('basket:change');
-              }
-          });
-
-          productData.basketModal.clearBasket();
+          appState.basketModal.clearBasket();
           events.emit('basket:change');
 
           modal.render({
@@ -237,7 +237,7 @@ events.on('modal:close', () => {
 });
 
 api.getProductList()
-  .then(productData.setCatalog.bind(productData))
+  .then(appState.setCatalog.bind(appState))
   .catch(err => {
     console.error(err);
   });

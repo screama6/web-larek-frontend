@@ -1,7 +1,7 @@
-import {Component} from "../base/Component";
-import {cloneTemplate, createElement, ensureElement} from "../../utils/utils";
-import {EventEmitter} from "../base/events";
-import { IBasketModal,IBasketItem} from "../../types";
+import {Component} from "./base/Component";
+import {cloneTemplate, createElement, ensureElement} from "../utils/utils";
+import {EventEmitter} from "./base/Events";
+import { IBasketModal,IBasketItem} from "../types";
 
 interface IBasketView {
     items: HTMLElement[];
@@ -35,18 +35,17 @@ export class Basket extends Component<IBasketView> {
 
     set items(items: HTMLElement[]) {
         if (items.length) {
-        console.log(this._total.textContent)
             if(this._total.textContent === '0 синапсов'){
-                this.setDisabled(this._button, true)
+                this.toggleButton(true);
             } else {
-                this.setDisabled(this._button, false)
+                this.toggleButton(false);
             }
             this._list.replaceChildren(...items);
         } else {
             this._list.replaceChildren(createElement<HTMLParagraphElement>('p', {
                 textContent: 'Корзина пуста'
             }));
-            this.setDisabled(this._button, true)
+            this.toggleButton(true);
         }
     }
 
@@ -61,13 +60,16 @@ export class Basket extends Component<IBasketView> {
     set total(total: number) {
         this.setText(this._total, String(`${total} синапсов`));
     }
+
+    toggleButton(state: boolean) {
+        this.setDisabled(this._button, state);
+    } 
 }
 
 export class BasketModal implements IBasketModal {
     items: IBasketItem[] = [];
 
     add(item: IBasketItem) {
-        console.log(this.items)
         if (!this.items.some(it => it.id === item.id)) {
             this.items.push(item);
         }

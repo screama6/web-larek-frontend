@@ -106,14 +106,16 @@ export class CatalogItem<T> extends Card<T> {
         this._category = container.querySelector(`.card__category`);
     }
 
+    protected _categoryColor = <Record<string, string>> { // опсания категории
+        "софт-скил": "soft",
+        "другое": "other",
+        "дополнительное": "additional",
+        "кнопка": "button",
+        "хард-скил": "hard"
+      }
+
     set category(category: ItemCategory) {
         this.setText(this._category, category);
-        this._category.className = clsx('card__category', {
-            [bem(this.blockName, 'category', 'soft').name]: category === 'софт-скил',
-            [bem(this.blockName, 'category', 'hard').name]: category === 'хард-скил',
-            [bem(this.blockName, 'category', 'other').name]: category === 'другое',
-            [bem(this.blockName, 'category', 'additional').name]: category === 'дополнительное',
-            [bem(this.blockName, 'category', 'button').name]: category === 'кнопка'
-        });
+        this.toggleClass(this._category, `card__category_${this._categoryColor[category]}`, true)
     };
 };

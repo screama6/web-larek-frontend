@@ -1,13 +1,13 @@
 import {Form} from "./common/Form";
 import {IOrderForm, IUserForm} from "../types";
-import {IEvents} from "./base/events";
+import {IEvents} from "./base/Events";
 import {ensureAllElements} from "../utils/utils";
 
 export type TabActions = {
     onClick: (name: string) => void
 }
 
-export class Order extends Form<IOrderForm>{
+export class OrderForm extends Form<IOrderForm>{
 
     protected _buttons?: HTMLButtonElement[];
     protected _button: HTMLButtonElement;
@@ -25,7 +25,7 @@ export class Order extends Form<IOrderForm>{
        
     }
 
-    set paymentMethod(name: string) {
+    set payment(name: string) {
         this._buttons.forEach(button => {
             this.toggleClass(button, 'button_alt-active', button.name === name)
             this.setDisabled(button, button.name === name)
@@ -39,7 +39,7 @@ export class Order extends Form<IOrderForm>{
 }
 
 
-export class User extends Form<IUserForm> {
+export class ContactsForm extends Form<IUserForm> {
 
  
 

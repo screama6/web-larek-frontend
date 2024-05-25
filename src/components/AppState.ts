@@ -1,6 +1,6 @@
 import {OrderFormErrors, UserFormErrors, IOrder, IOrderForm, IProductItem, IProductsData, IUserForm, IBasketModal} from "../types";
 import {Model} from "./base/Model";
-import {BasketModal } from "./common/Basket";
+import {BasketModal } from "./Basket";
 
 export class ProductItem extends Model<IProductItem> { 
   id: string;
@@ -12,7 +12,7 @@ export class ProductItem extends Model<IProductItem> {
 }
 
 
-export class ProductData extends Model<IProductsData> {
+export class AppState extends Model<IProductsData> {
   cards: ProductItem[];
   orderForm: IOrderForm = {
     payment: '',
